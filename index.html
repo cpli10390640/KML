@@ -9,8 +9,8 @@
 <title>ปฏิทินห้องพัก Klin Mali</title>
 <style>
 :root{color-scheme:light;--bg:#fff8f1;--card:#fff;--ink:#222;--muted:#6f675c;--line:#eadccb;
---in:#13865f;--inSoft:#dff4ea;--out:#d0621f;--outSoft:#fde9dc;--wait:#9a6b00;--waitSoft:#fff1c9;
---rep:#c23a3a;--repSoft:#fde3e3;--done:#5f6368;--doneSoft:#eceff1;--brand:#e8892d}
+--in:#13865f;--inSoft:#dff4ea;--out:#d63333;--outSoft:#fde4e4;--wait:#9a6b00;--waitSoft:#fff1c9;
+--rep:#5f6368;--repBg:#d9dde1;--repSoft:#eef0f2;--hold:#a55a12;--holdBg:#fbc99a;--holdSoft:#feead6;--err:#c23a3a;--errSoft:#fde3e3;--done:#5f6368;--doneSoft:#eceff1;--brand:#e8892d}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{background:var(--bg)}
 body{margin:0;color:var(--ink);font-family:"Sarabun","Noto Sans Thai","Leelawadee UI",system-ui,sans-serif;font-size:18px;line-height:1.45}
@@ -27,14 +27,15 @@ h1{font-size:22px;margin:0;color:#a85512}
 .cal{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:8px}
 .grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
 .dow{text-align:center;font-size:15px;font-weight:700;color:var(--muted);padding:4px 0}
-.dow.sun{color:var(--rep)}
+.dow.sun{color:var(--out)}
 .cell{min-width:0;min-height:64px;border:0;border-radius:12px;background:none;font:inherit;color:var(--ink);padding:4px 0 0;display:flex;flex-direction:column;align-items:center}
 .cell .n{font-size:20px;font-weight:700;line-height:1.2}
 .cell.today .n{color:#fff;background:var(--ink);border-radius:50%;width:32px;height:32px;line-height:32px}
 .cell.sel{outline:3px solid var(--brand);outline-offset:-1px}
 .marks{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;margin-top:3px;padding:0 2px}
 .mk{width:18px;height:17px;border-radius:5px;font-size:11px;font-weight:800;line-height:17px;color:#fff;text-align:center}
-.mk.i{background:var(--in)}.mk.o{background:var(--out)}.mk.r{background:var(--rep)}
+.mk.i{background:var(--in)}.mk.o{background:var(--out)}.mk.r{background:var(--repBg);color:var(--rep);width:auto;padding:0 4px}.mk.h{background:var(--holdBg);color:var(--hold);width:auto;padding:0 4px}
+.t-hold{background:var(--holdSoft);color:var(--hold)}
 .detail{margin-top:16px}
 .dtitle{font-size:22px;font-weight:800;margin:0 4px 10px}
 .dtitle small{display:block;font-size:15px;font-weight:600;color:var(--muted)}
@@ -52,7 +53,7 @@ h1{font-size:22px;margin:0;color:#a85512}
 .s-in{background:var(--inSoft);color:var(--in)}.s-out{background:var(--doneSoft);color:var(--done)}.s-wait{background:var(--waitSoft);color:var(--wait)}.s-rep{background:var(--repSoft);color:var(--rep)}.s-other{background:var(--doneSoft);color:var(--ink)}
 .fab{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom));border:0;font-family:inherit;background:var(--brand);color:#fff;border-radius:999px;padding:12px 18px;font-weight:700;font-size:15px;box-shadow:0 6px 18px rgba(232,137,45,.35);cursor:pointer}
 .note{font-size:13px;color:var(--muted);margin-top:22px;line-height:1.6;text-align:center}
-.err{background:var(--repSoft);color:var(--rep);border-radius:12px;padding:10px 14px;font-size:15px;margin:8px 0}
+.err{background:var(--errSoft);color:var(--err);border-radius:12px;padding:10px 14px;font-size:15px;margin:8px 0}
 </style>
 </head>
 <body>
@@ -69,9 +70,10 @@ h1{font-size:22px;margin:0;color:#a85512}
   </div>
   <button class="todaybtn" id="tdy">กลับมาวันนี้</button>
   <div class="legend">
-    <span><i style="background:var(--in)"></i>ห้องที่มีคนเข้า</span>
-    <span><i style="background:var(--out)"></i>ห้องที่มีคนออก</span>
-    <span><i style="background:var(--rep)"></i>รอซ่อม</span>
+    <span><i style="background:var(--in)"></i>Check in</span>
+    <span><i style="background:var(--out)"></i>Check out</span>
+    <span><i style="background:var(--repBg)"></i>รอซ่อม</span>
+    <span><i style="background:var(--holdBg)"></i>วันหยุด/ปิดห้อง</span>
   </div>
   <div class="cal"><div class="grid" id="grid"></div></div>
   <div class="detail" id="detail"></div>
@@ -109,16 +111,18 @@ function statusInfo(s){
   return {cls:"s-other",label:s||"ไม่ระบุสถานะ"};
 }
 
+const isHold=b=>/วันหยุด|ปิดห้อง|ปิดรีสอร์ท/.test(b.name+" "+b.status);
 /* ---------- ปฏิทิน ---------- */
 function onDay(b,k){return b.inK<=k&&k<=b.outK;}
 function summary(k){
-  const ins=new Set(),outs=new Set(),rep=new Set();
+  const ins=new Set(),outs=new Set(),rep=new Set(),hold=new Set();
   BOOKINGS.forEach(b=>{
+    if(isHold(b)){ if(onDay(b,k)) hold.add(b.room); return; }
     if(b.inK===k) ins.add(b.room);
     if(b.outK===k) outs.add(b.room);
     if(onDay(b,k)&&statusInfo(b.status).cls==="s-rep") rep.add(b.room);
   });
-  return {i:ins.size,o:outs.size,r:rep.size};
+  return {i:ins.size,o:outs.size,r:rep.size,h:hold.size};
 }
 function renderCal(){
   document.getElementById("mt").textContent=`${TH_M[cur.m]} ${cur.y+543}`;
@@ -127,7 +131,7 @@ function renderCal(){
   for(let i=0;i<first;i++) h+="<div></div>";
   for(let d=1;d<=days;d++){
     const k=key(cur.y,cur.m,d), s=summary(k);
-    const marks=(s.i?`<span class="mk i">${s.i}</span>`:"")+(s.o?`<span class="mk o">${s.o}</span>`:"")+(s.r?`<span class="mk r">!</span>`:"");
+    const marks=(s.i?`<span class="mk i">${s.i}</span>`:"")+(s.o?`<span class="mk o">${s.o}</span>`:"")+(s.r?`<span class="mk r">ซ่อม</span>`:"")+(s.h?`<span class="mk h">หยุด</span>`:"");
     h+=`<button class="cell ${k===TODAY?"today":""} ${k===sel?"sel":""}" data-k="${k}" aria-label="${d} ${TH_M[cur.m]}"><span class="n">${d}</span><span class="marks">${marks}</span></button>`;
   }
   document.getElementById("grid").innerHTML=h;
@@ -141,10 +145,15 @@ function renderDetail(){
     h+=`<div class="room"><h3>ห้อง ${i+1} · ${esc(r)}</h3>`;
     if(!list.length) h+=`<div class="free">ว่าง</div>`;
     list.forEach(b=>{
+      if(isHold(b)){
+        h+=`<div class="ev"><div class="line1"><span class="tag t-hold">วันหยุด</span><span class="who">${/^\s*วันหยุด\s*$/.test(b.name)?"ปิดห้อง":esc(b.name)}</span></div>
+          <div class="line2"><span>${shortDate(b.inK)} ${esc(b.inT)} → ${shortDate(b.outK)} ${esc(b.outT)}</span></div></div>`;
+        return;
+      }
       const st=statusInfo(b.status);
       let tag;
-      if(b.outK===sel&&b.inK!==sel) tag=`<span class="tag t-out">ออก ${esc(b.outT||"-")}</span>`;
-      else if(b.inK===sel) tag=`<span class="tag t-in">เข้า ${esc(b.inT||"-")}</span>`;
+      if(b.outK===sel&&b.inK!==sel) tag=`<span class="tag t-out">Check out ${esc(b.outT||"-")}</span>`;
+      else if(b.inK===sel) tag=`<span class="tag t-in">Check in ${esc(b.inT||"-")}</span>`;
       else tag=`<span class="tag t-mid">พักต่อ</span>`;
       h+=`<div class="ev"><div class="line1">${tag}<span class="who">${esc(b.name)}</span></div>
         <div class="line2"><span class="st ${st.cls}">${esc(st.label)}</span>
