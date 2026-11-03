@@ -10,7 +10,7 @@
 <style>
 :root{color-scheme:light;--bg:#fff8f1;--card:#fff;--ink:#222;--muted:#6f675c;--line:#eadccb;
 --in:#13865f;--inSoft:#dff4ea;--out:#d63333;--outSoft:#fde4e4;--wait:#9a6b00;--waitSoft:#fff1c9;
---rep:#5f6368;--repBg:#d9dde1;--repSoft:#eef0f2;--hold:#a55a12;--holdBg:#fbc99a;--holdSoft:#feead6;--err:#c23a3a;--errSoft:#fde3e3;--done:#5f6368;--doneSoft:#eceff1;--brand:#e8892d}
+--rep:#5f6368;--repBg:#d9dde1;--repSoft:#eef0f2;--hold:#a55a12;--holdBg:#fbc99a;--holdSoft:#feead6;--err:#c23a3a;--errSoft:#fde3e3;--done:#5f6368;--doneSoft:#eceff1;--brand:#e8892d;--stay:#2f6fb5;--stayBg:#f1f6fc;--free:#e6dfd3}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{background:var(--bg)}
 body{margin:0;color:var(--ink);font-family:"Sarabun","Noto Sans Thai","Leelawadee UI",system-ui,sans-serif;font-size:18px;line-height:1.45}
@@ -28,13 +28,24 @@ h1{font-size:22px;margin:0;color:#a85512}
 .grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
 .dow{text-align:center;font-size:15px;font-weight:700;color:var(--muted);padding:4px 0}
 .dow.sun{color:var(--out)}
-.cell{min-width:0;min-height:64px;border:0;border-radius:12px;background:none;font:inherit;color:var(--ink);padding:4px 0 0;display:flex;flex-direction:column;align-items:center}
+.cell{min-width:0;min-height:84px;border:0;border-radius:12px;background:none;font:inherit;color:var(--ink);padding:4px 0 0;display:flex;flex-direction:column;align-items:center}
 .cell .n{font-size:20px;font-weight:700;line-height:1.2}
 .cell.today .n{color:#fff;background:var(--ink);border-radius:50%;width:32px;height:32px;line-height:32px}
 .cell.sel{outline:3px solid var(--brand);outline-offset:-1px}
-.marks{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;margin-top:3px;padding:0 2px}
-.mk{width:18px;height:17px;border-radius:5px;font-size:11px;font-weight:800;line-height:17px;color:#fff;text-align:center}
-.mk.i{background:var(--in)}.mk.o{background:var(--out)}.mk.r{background:var(--repBg);color:var(--rep);width:auto;padding:0 4px}.mk.h{background:var(--holdBg);color:var(--hold);width:auto;padding:0 4px}
+.cell.busy{background:var(--stayBg)}
+.bars{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;width:92%;margin-top:5px}
+.b{height:22px;border-radius:4px;background:var(--free)}
+.b.in{background:var(--in)}.b.out{background:var(--out)}.b.stay{background:var(--stay)}
+.b.turn{background:linear-gradient(90deg,var(--out) 50%,var(--in) 50%)}
+.b.rep{background:repeating-linear-gradient(45deg,#b9bec4 0 4px,#e3e6e9 4px 8px)}.b.hold{background:var(--holdBg)}
+.use{font-size:13px;font-weight:800;color:var(--stay);margin-top:3px;line-height:1.3}
+.use.none{color:#a49a8a;font-weight:600}.use.full{color:#fff;background:var(--out);border-radius:6px;padding:0 6px}
+.key{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:10px 12px;margin:10px 0}
+.key .row{display:flex;align-items:center;gap:12px}
+.key .bars{width:150px;margin:0;flex:0 0 auto}.key .b{height:26px;font-size:13px;line-height:26px;color:#fff;font-weight:800;text-align:center}
+.key .b.free{color:#8a8172}
+.key .txt{font-size:15px;line-height:1.4}
+.key .legend{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:15px;color:var(--ink);margin:10px 0 0;justify-content:start}
 .t-hold{background:var(--holdSoft);color:var(--hold)}
 .detail{margin-top:16px}
 .dtitle{font-size:22px;font-weight:800;margin:0 4px 10px}
@@ -74,15 +85,21 @@ h1{font-size:22px;margin:0;color:#a85512}
     <button id="next" aria-label="เดือนถัดไป">›</button>
   </div>
   <button class="todaybtn" id="tdy">กลับมาวันนี้</button>
-  <div class="legend">
-    <span><i style="background:var(--in)"></i>Check in</span>
-    <span><i style="background:var(--out)"></i>Check out</span>
-    <span><i style="background:var(--repBg)"></i>รอซ่อม</span>
-    <span><i style="background:var(--holdBg)"></i>วันหยุด/ปิดห้อง</span>
+  <div class="key">
+    <div class="row"><div class="bars"><i class="b stay">1</i><i class="b free">2</i><i class="b in">3</i><i class="b free">4</i><i class="b free">5</i></div>
+      <div class="txt">แถบ 5 ช่อง = <b>ห้อง 1–5</b><br>เรียงจากซ้ายไปขวา</div></div>
+    <div class="legend">
+      <span><i style="background:var(--in)"></i>Check in</span>
+      <span><i style="background:var(--stay)"></i>มีคนพักอยู่</span>
+      <span><i style="background:var(--out)"></i>Check out</span>
+      <span><i style="background:var(--free)"></i>ห้องว่าง</span>
+      <span><i style="background:repeating-linear-gradient(45deg,#b9bec4 0 4px,#e3e6e9 4px 8px)"></i>รอซ่อม</span>
+      <span><i style="background:var(--holdBg)"></i>วันหยุด/ปิดห้อง</span>
+    </div>
   </div>
   <div class="cal"><div class="grid" id="grid"></div></div>
   <div class="detail" id="detail"></div>
-  <p class="note">ตัวเลขในช่อง = จำนวนห้อง · แตะวันที่เพื่อดูว่าใครเข้า–ออกกี่โมง<br>อัปเดตเองทุก 1 นาที (Google อาจหน่วงประมาณ 5 นาทีหลังแก้ชีต)</p>
+  <p class="note">“พัก X” = จำนวนห้องที่มีแขกพักคืนนั้น · แตะวันที่เพื่อดูว่าใครเข้า–ออกกี่โมง<br>อัปเดตเองทุก 1 นาที (Google อาจหน่วงประมาณ 5 นาทีหลังแก้ชีต)</p>
 </div>
 <button class="fab" id="reload">🔄 อัปเดต</button>
 <script>
@@ -119,15 +136,20 @@ function statusInfo(s){
 const isHold=b=>/วันหยุด|ปิดห้อง|ปิดรีสอร์ท/.test(b.name+" "+b.status);
 /* ---------- ปฏิทิน ---------- */
 function onDay(b,k){return b.inK<=k&&k<=b.outK;}
-function summary(k){
-  const ins=new Set(),outs=new Set(),rep=new Set(),hold=new Set();
+/* สถานะของแต่ละห้องในวันนั้น: hold > rep > turn > in > stay > out > free */
+function roomState(r,k){
+  let inn=false,out=false,stay=false,rp=false,hd=false;
   BOOKINGS.forEach(b=>{
-    if(isHold(b)){ if(onDay(b,k)) hold.add(b.room); return; }
-    if(b.inK===k) ins.add(b.room);
-    if(b.outK===k) outs.add(b.room);
-    if(onDay(b,k)&&statusInfo(b.status).cls==="s-rep") rep.add(b.room);
+    if(b.room!==r||!onDay(b,k)) return;
+    if(isHold(b)){hd=true;return;}
+    if(statusInfo(b.status).cls==="s-rep"){rp=true;return;}
+    if(b.inK===k) inn=true;
+    else if(b.outK===k) out=true;
+    else stay=true;
   });
-  return {i:ins.size,o:outs.size,r:rep.size,h:hold.size};
+  if(hd) return "hold"; if(rp) return "rep";
+  if(inn&&out) return "turn"; if(inn) return "in"; if(stay) return "stay"; if(out) return "out";
+  return "free";
 }
 function renderCal(){
   document.getElementById("mt").textContent=`${TH_M[cur.m]} ${cur.y+543}`;
@@ -135,9 +157,12 @@ function renderCal(){
   let h=DOWS.map((d,i)=>`<div class="dow ${i===0?"sun":""}">${d}</div>`).join("");
   for(let i=0;i<first;i++) h+="<div></div>";
   for(let d=1;d<=days;d++){
-    const k=key(cur.y,cur.m,d), s=summary(k);
-    const marks=(s.i?`<span class="mk i">${s.i}</span>`:"")+(s.o?`<span class="mk o">${s.o}</span>`:"")+(s.r?`<span class="mk r">ซ่อม</span>`:"")+(s.h?`<span class="mk h">หยุด</span>`:"");
-    h+=`<button class="cell ${k===TODAY?"today":""} ${k===sel?"sel":""}" data-k="${k}" aria-label="${d} ${TH_M[cur.m]}"><span class="n">${d}</span><span class="marks">${marks}</span></button>`;
+    const k=key(cur.y,cur.m,d), st=ROOMS.map((_,r)=>roomState(r,k));
+    const guests=st.filter(s=>s==="in"||s==="stay"||s==="turn").length;
+    const blocked=guests+st.filter(s=>s==="rep"||s==="hold").length;
+    const bars=st.map((s,r)=>`<i class="b ${s}" title="ห้อง ${r+1}"></i>`).join("");
+    const lab=blocked===5?`<span class="use full">เต็ม</span>`:guests?`<span class="use">พัก ${guests}</span>`:`<span class="use none">ว่าง</span>`;
+    h+=`<button class="cell ${guests?"busy":""} ${k===TODAY?"today":""} ${k===sel?"sel":""}" data-k="${k}" aria-label="${d} ${TH_M[cur.m]}"><span class="n">${d}</span><span class="bars">${bars}</span>${lab}</button>`;
   }
   document.getElementById("grid").innerHTML=h;
 }
@@ -156,6 +181,12 @@ function renderDetail(){
         return;
       }
       const st=statusInfo(b.status);
+      if(st.cls==="s-rep"){
+        h+=`<div class="ev"><div class="line1"><span class="tag t-mid">รอซ่อม</span></div>
+          <div class="name"><span class="lb">รายการ :</span><span class="v">${esc(b.name)}</span></div>
+          <div class="dates">${shortDate(b.inK)} ${esc(b.inT)} → ${shortDate(b.outK)} ${esc(b.outT)}</div></div>`;
+        return;
+      }
       let tag;
       if(b.outK===sel&&b.inK!==sel) tag=`<span class="tag t-out">Check out ${esc(b.outT||"-")}</span>`;
       else if(b.inK===sel) tag=`<span class="tag t-in">Check in ${esc(b.inT||"-")}</span>`;
