@@ -48,6 +48,11 @@ h1{font-size:22px;margin:0;color:#a85512}
 .tag{border-radius:12px;padding:4px 12px;font-weight:800;font-size:18px}
 .t-in{background:var(--inSoft);color:var(--in)}.t-out{background:var(--outSoft);color:var(--out)}.t-mid{background:var(--doneSoft);color:var(--done)}
 .who{font-size:19px;font-weight:700}
+.name{margin-top:6px;font-size:18px;display:flex;gap:6px;min-width:0}
+.name .v{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.lb{color:var(--muted);font-weight:600;flex:0 0 auto}
+.row2{margin-top:4px;font-size:16px;display:flex;gap:8px;align-items:center}
+.dates{margin-top:4px;font-size:15px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .line2{font-size:15px;color:var(--muted);margin-top:4px;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
 .st{font-size:14px;font-weight:700;border-radius:999px;padding:2px 10px}
 .s-in{background:var(--inSoft);color:var(--in)}.s-out{background:var(--doneSoft);color:var(--done)}.s-wait{background:var(--waitSoft);color:var(--wait)}.s-rep{background:var(--repSoft);color:var(--rep)}.s-other{background:var(--doneSoft);color:var(--ink)}
@@ -155,9 +160,10 @@ function renderDetail(){
       if(b.outK===sel&&b.inK!==sel) tag=`<span class="tag t-out">Check out ${esc(b.outT||"-")}</span>`;
       else if(b.inK===sel) tag=`<span class="tag t-in">Check in ${esc(b.inT||"-")}</span>`;
       else tag=`<span class="tag t-mid">พักต่อ</span>`;
-      h+=`<div class="ev"><div class="line1">${tag}<span class="who">${esc(b.name)}</span></div>
-        <div class="line2"><span class="st ${st.cls}">${esc(st.label)}</span>
-        <span>${shortDate(b.inK)} ${esc(b.inT)} → ${shortDate(b.outK)} ${esc(b.outT)}</span>${b.people?`<span>· ${esc(b.people)} คน</span>`:""}</div></div>`;
+      h+=`<div class="ev"><div class="line1">${tag}</div>
+        <div class="name"><span class="lb">ชื่อผู้เข้าพัก :</span><span class="v">${esc(b.name)}</span></div>
+        <div class="row2"><span class="lb">Status :</span><span class="st ${st.cls}">${esc(st.label)}</span></div>
+        <div class="dates">${shortDate(b.inK)} ${esc(b.inT)} → ${shortDate(b.outK)} ${esc(b.outT)}${b.people?` · ${esc(b.people)} คน`:""}</div></div>`;
     });
     h+="</div>";
   });
