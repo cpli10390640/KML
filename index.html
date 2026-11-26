@@ -116,7 +116,7 @@ const DOWL=["วันอาทิตย์","วันจันทร์","ว�
 
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const pad=n=>String(n).padStart(2,"0");
-const key=(y,m,d)=>`y-{pad(m+1)}-${pad(d)}`;
+const key=(y,m,d)=>`${y}-${pad(m+1)}-${pad(d)}`;
 const parseKey=k=>{const[a,b,c]=k.split("-").map(Number);return new Date(a,b-1,c);};
 const shortDate=k=>{const d=parseKey(k);return `${d.getDate()} ${TH_S[d.getMonth()]}`;};
 const now=new Date(), TODAY=key(now.getFullYear(),now.getMonth(),now.getDate());
@@ -154,7 +154,7 @@ function roomState(r,k){
 function renderCal(){
   document.getElementById("mt").textContent=`${TH_M[cur.m]} ${cur.y+543}`;
   const first=new Date(cur.y,cur.m,1).getDay(), days=new Date(cur.y,cur.m+1,0).getDate();
-  let h=DOWS.map((d,i)=>`<div class="dow i===0?"sun":""">{d}</div>`).join("");
+  let h=DOWS.map((d,i)=>`<div class="dow ${i===0?"sun":""}">${d}</div>`).join("");
   for(let i=0;i<first;i++) h+="<div></div>";
   for(let d=1;d<=days;d++){
     const k=key(cur.y,cur.m,d), st=ROOMS.map((_,r)=>roomState(r,k));
@@ -162,13 +162,13 @@ function renderCal(){
     const blocked=guests+st.filter(s=>s==="rep"||s==="hold").length;
     const bars=st.map((s,r)=>`<i class="b ${s}" title="ห้อง ${r+1}"></i>`).join("");
     const lab=blocked===5?`<span class="use full">เต็ม</span>`:guests?`<span class="use">พัก ${guests}</span>`:`<span class="use none">ว่าง</span>`;
-    h+=`<button class="cell ${guests?"busy":""} ${k===TODAY?"today":""} k===sel?"sel":"""data-k="{k}" aria-label="${d} THM[cur.m]"><spanclass="n">{d}</span><span class="bars">bars</span>{lab}</button>`;
+    h+=`<button class="cell ${guests?"busy":""} ${k===TODAY?"today":""} ${k===sel?"sel":""}" data-k="${k}" aria-label="${d} ${TH_M[cur.m]}"><span class="n">${d}</span><span class="bars">${bars}</span>${lab}</button>`;
   }
   document.getElementById("grid").innerHTML=h;
 }
 function renderDetail(){
   const dt=parseKey(sel);
-  let h=`<div class="dtitle">${DOWL[dt.getDay()]}ที่ ${dt.getDate()} ${TH_M[dt.getMonth()]} dt.getFullYear()+543{sel===TODAY?"<small>วันนี้</small>":""}</div>`;
+  let h=`<div class="dtitle">${DOWL[dt.getDay()]}ที่ ${dt.getDate()} ${TH_M[dt.getMonth()]} ${dt.getFullYear()+543}${sel===TODAY?"<small>วันนี้</small>":""}</div>`;
   ROOMS.forEach((r,i)=>{
     const list=BOOKINGS.filter(b=>b.room===i&&onDay(b,sel))
       .sort((a,b)=>(a.outK===sel?0:a.inK===sel?2:1)-(b.outK===sel?0:b.inK===sel?2:1));
@@ -193,8 +193,8 @@ function renderDetail(){
       else tag=`<span class="tag t-mid">พักต่อ</span>`;
       h+=`<div class="ev"><div class="line1">${tag}</div>
         <div class="name"><span class="lb">ชื่อผู้เข้าพัก :</span><span class="v">${esc(b.name)}</span></div>
-        <div class="row2"><span class="lb">Status :</span><span class="st st.cls">{esc(st.label)}</span></div>
-        <div class="dates">${shortDate(b.inK)} ${esc(b.inT)} → ${shortDate(b.outK)} esc(b.outT){b.people?` · ${esc(b.people)} คน`:""}</div></div>`;
+        <div class="row2"><span class="lb">Status :</span><span class="st ${st.cls}">${esc(st.label)}</span></div>
+        <div class="dates">${shortDate(b.inK)} ${esc(b.inT)} → ${shortDate(b.outK)} ${esc(b.outT)}${b.people?` · ${esc(b.people)} คน`:""}</div></div>`;
     });
     h+="</div>";
   });
@@ -218,7 +218,7 @@ function parseCSV(t){const rows=[];let row=[],f="",q=false;
   if(f||row.length){row.push(f);rows.push(row);}return rows;}
 function parseDMY(s){const m=String(s||"").trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(!m)return null;
   let y=+m[3]; if(y>2400) y-=543; return key(y,+m[2]-1,+m[1]);}
-function parseTime(s){const m=String(s||"").trim().match(/^(\d{1,2})[:.](\d{2})/);return m?`pad(+m[1]):{m[2]}`:"";}
+function parseTime(s){const m=String(s||"").trim().match(/^(\d{1,2})[:.](\d{2})/);return m?`${pad(+m[1])}:${m[2]}`:"";}
 function roomIndex(s){const t=String(s||"");for(let i=0;i<ROOMS.length;i++){if(t.includes(ROOMS[i]))return i;}
   const m=t.match(/^\s*([1-5])\s*\./);return m?+m[1]-1:-1;}
 function toBookings(rows){
@@ -252,11 +252,11 @@ async function load(){
     const text=await res.text();
     if(text.length>10*1024*1024) throw new Error("ข้อมูลใหญ่เกินไป");
     BOOKINGS=toBookings(parseCSV(text)); lastOk=new Date();
-    src.textContent=`ข้อมูลจาก Google Sheets · อัปเดตล่าสุด pad(lastOk.getHours()):{pad(lastOk.getMinutes())} น.`;
+    src.textContent=`ข้อมูลจาก Google Sheets · อัปเดตล่าสุด ${pad(lastOk.getHours())}:${pad(lastOk.getMinutes())} น.`;
     msg.innerHTML=""; render();
   }catch(e){
     msg.innerHTML=`<div class="err">โหลดข้อมูลไม่สำเร็จ: ${esc(e.message)}</div>`;
-    if(lastOk) src.textContent=`อัปเดตล่าสุด pad(lastOk.getHours()):{pad(lastOk.getMinutes())} น.`;
+    if(lastOk) src.textContent=`อัปเดตล่าสุด ${pad(lastOk.getHours())}:${pad(lastOk.getMinutes())} น.`;
   }finally{loading=false;}
 }
 document.getElementById("reload").onclick=load;
@@ -266,4 +266,3 @@ render(); load();
 </script>
 </body>
 </html>
-
